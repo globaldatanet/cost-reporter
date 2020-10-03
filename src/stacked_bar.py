@@ -12,8 +12,9 @@ cyan = "#2db2a1"
 pink = "#ff6f61"
 magenta = "#a41d53"
 purple = "#6a45ce"
-green = "#3ecc54"
-COLORS = [purple, green, pink, yellow, magenta, cyan]
+light_green = "#3ecc54"
+dark_green = "#2db2a1"
+COLORS = [purple, dark_green, pink, yellow, light_green, magenta, cyan]
 
 
 def draw_bars(all_bars):
