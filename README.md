@@ -1,6 +1,6 @@
 # Cost Reporter
 
-This lambda sends a daily cost and trend report to slack. It helps with one of the three (**FinOps**)[https://www.linkedin.com/company/finops-foundation/] phases: `Inform`. This lambda will send you a cost report every day / only when cost increases / only when cost breached a threshold depending on your configuration.
+This lambda sends a daily cost and trend report to slack. It helps with one of the three [**FinOps**](https://www.linkedin.com/company/finops-foundation/) phases: `Inform`. This lambda will send you a cost report every day / only when cost increases / only when cost breached a threshold depending on your configuration.
 
 <img style="float: right;" src="https://www.cloudvane.com/wp-content/uploads/2019/12/neos_finOps_1304x744_1-2.jpg">
 
