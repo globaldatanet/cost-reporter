@@ -17,13 +17,12 @@ dark_green = "#2db2a1"
 COLORS = [purple, dark_green, pink, yellow, light_green, magenta, cyan]
 
 
-def draw_bars(all_bars):
+def draw_bars(all_bars, dates, title):
     first_key = list(all_bars.keys())[0]
     days = len(all_bars[first_key])
     # The position of the bars on the x-axis
     r = range(days)
     # Names of group and bar width (assuming the data starts at the first of the month)
-    names = [str(x + 1) for x in r]
     barWidth = 0.5
 
     # Draw bars
@@ -41,11 +40,12 @@ def draw_bars(all_bars):
         previous_bar = all_bars[label]
 
     # Custom X axis
-    plt.xticks(r, names, fontweight='bold')
+    plt.xticks(r, dates, fontweight='bold')
     plt.xlabel("Days")
     plt.ylabel("Cost")
 
     plt.legend()
+    plt.title(title)
 
     # y-axis in bold
     rc('font', weight='bold')

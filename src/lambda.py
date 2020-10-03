@@ -3,16 +3,30 @@ from datetime import datetime, timedelta
 import json
 import stacked_bar
 
+TITLE = "Project: XYZ"
 DAYS = 10
+MIN_DAILY_COST = 10
+ONLY_NOTIFY_ON_INCREASE = False
+TARGET_CHANNEL = "#costoptimization"
 
 
 def get_daily_cost():
-    """ Returns the spend for each service
+    """ Returns the spend for each service together with the days
     """
-    client = boto3.client('ce')
     today = datetime.today().strftime('%Y-%m-%d')
     # first_day_of_month = datetime.today().replace(day=1).strftime('%Y-%m-%d')
     start_date = (datetime.now() - timedelta(days=DAYS)).strftime('%Y-%m-%d')
+
+    # Calculate dates
+    dates = []
+    for i in range(0, DAYS):
+        day = (datetime.today() - timedelta(days=i)).strftime("%d")
+        print(day)
+        dates.append(day)
+    dates.reverse()
+
+    # Get daily spend
+    client = boto3.client('ce')
     results = client.get_cost_and_usage(
         TimePeriod={
             'Start': start_date,
@@ -48,11 +62,11 @@ def get_daily_cost():
                 daily_cost[service].append(0)
 
     print(json.dumps(daily_cost, indent=4))
-    return daily_cost
+    return (daily_cost, dates)
 
 
 def lambda_handler(event, context):
-    daily_cost = get_daily_cost()
+    (daily_cost, dates) = get_daily_cost()
 
     # Find the biggest spenders
     total_cost = []
@@ -73,12 +87,9 @@ def lambda_handler(event, context):
     for service in the_rest:
         graph_data["Other"] = [x + y for x, y in zip(graph_data["Other"], daily_cost[service])]
     
-    print(graph_data)
+    print(graph_data, dates)
 
-    for service in graph_data.keys():
-        
-
-    stacked_bar.draw_bars(graph_data)
+    stacked_bar.draw_bars(graph_data, dates, f"{TITLE} (last {DAYS} days)")
 
     #print(json.dumps(results, indent=4))
 
