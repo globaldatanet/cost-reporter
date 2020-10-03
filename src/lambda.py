@@ -1,12 +1,13 @@
 import boto3
 from datetime import datetime, timedelta
 import json
+import slack_sender
 import stacked_bar
 
 TITLE = "Project: XYZ"
 DAYS = 10
 MIN_DAILY_COST = 10
-ONLY_NOTIFY_ON_INCREASE = False
+ONLY_NOTIFY_ON_INCREASE = True
 TARGET_CHANNEL = "#costoptimization"
 
 
@@ -21,7 +22,7 @@ def get_daily_cost():
     dates = []
     for i in range(0, DAYS):
         day = (datetime.today() - timedelta(days=i)).strftime("%d")
-        print(day)
+        #print(day)
         dates.append(day)
     dates.reverse()
 
@@ -61,8 +62,35 @@ def get_daily_cost():
             if not found_service:
                 daily_cost[service].append(0)
 
-    print(json.dumps(daily_cost, indent=4))
+    #print(json.dumps(daily_cost, indent=4))
     return (daily_cost, dates)
+
+
+def trigger_notification(graph_data):
+    should_send = True
+
+    total_cost_today = 0
+    for service in graph_data.keys():
+        total_cost_today += graph_data[service][-1]
+    print(f"Total cost today: {total_cost_today}")
+
+    if ONLY_NOTIFY_ON_INCREASE:
+        # TODO check if cost increased     
+        total_cost_yesterday = 0
+        for service in graph_data.keys():
+            total_cost_yesterday += graph_data[service][-2]
+        print(f"Total cost yesterday: {total_cost_yesterday}")
+
+        if total_cost_today < total_cost_yesterday:
+            should_send = False
+
+    if MIN_DAILY_COST > total_cost_today:
+        should_send = False
+        print("Minimal daily cost not exceeded!")
+    else:
+        print("Minimal daily cost exceeded!")
+
+    return should_send
 
 
 def lambda_handler(event, context):
@@ -87,9 +115,14 @@ def lambda_handler(event, context):
     for service in the_rest:
         graph_data["Other"] = [x + y for x, y in zip(graph_data["Other"], daily_cost[service])]
     
-    print(graph_data, dates)
-
+    #print(graph_data, dates)
     stacked_bar.draw_bars(graph_data, dates, f"{TITLE} (last {DAYS} days)")
+
+    # Check if we should send a report
+    if trigger_notification(graph_data):
+        #slack_sender.send_image("image.jpg", TARGET_CHANNEL)
+        print("Sending message")
+
 
     #print(json.dumps(results, indent=4))
 
