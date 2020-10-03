@@ -11,6 +11,7 @@ boto3 = "*"
 numpy = "*"
 matplotlib = "*"
 pandas = "*"
+slack = "*"
 
 [requires]
 python_version = "3.8"
