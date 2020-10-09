@@ -1,0 +1,81 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  SAM Template for cost-reporter
+
+#-----------------------------------------------------
+# Globals
+#-----------------------------------------------------
+Globals: 
+  Function:
+    Timeout: 3
+
+#-----------------------------------------------------
+# Resources
+#-----------------------------------------------------
+Resources:
+  CostReporterLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: lambda.lambda_handler
+      Runtime: python3.8
+      Timeout: 30
+      Role: !GetAtt LambdaRole.Arn
+      Environment:
+        Variables:
+          TITLE: "Project: XYZ"
+          DAYS: "10"
+          MIN_DAILY_COST: "10"
+          ONLY_NOTIFY_ON_INCREASE: True
+          TARGET_CHANNEL: "#costoptimization"
+    Metadata:
+      BuildMethod: makefile
+
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - 
+         PolicyName: "CostReporterLambdaRole"
+         PolicyDocument:
+           Version: "2012-10-17"
+           Statement:
+              - 
+                Effect: "Allow"
+                Action:
+                  - "logs:CreateLogGroup"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                  - "ce:GetCostAndUsage"
+                Resource: "*"
+
+  CWEventsRule:
+    Type: AWS::Events::Rule
+    Properties:
+      ScheduleExpression: "rate(5 minutes)"
+      State:  "ENABLED"
+      Targets:
+      - 
+        Arn:
+          Fn::GetAtt:
+            - CostReporterLambda
+            - Arn
+        Id: CostReporterLambda
+
+  permissionForEventsToInvokeLambda:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref CostReporterLambda
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+
