@@ -17,7 +17,7 @@ Resources:
   CostReporterLambda:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: src/
+      CodeUri: cost-reporter/
       Handler: lambda.lambda_handler
       Runtime: python3.8
       Timeout: 30
