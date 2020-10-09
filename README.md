@@ -17,3 +17,15 @@ The following variables can be configured in the lambda.
 - MIN_DAILY_COST: The minimal daily cost required to trigger a report in $ (i.e. 10)
 - ONLY_NOTIFY_ON_INCREASE: Whether to send a report only when the cost increased from yesterday to today
 - TARGET_CHANNEL: The target channel (i.e. "#costoptimization")
+
+## Deployment
+
+Prerequisites:
+- [AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html)
+
+How to deploy:
+```bash
+sam init
+sam build --use-container
+sam deploy
+```
