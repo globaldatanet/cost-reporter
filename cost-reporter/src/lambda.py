@@ -3,12 +3,13 @@ from datetime import datetime, timedelta
 import json
 import slack_sender
 import stacked_bar
+import os
 
-TITLE = "Project: XYZ"
-DAYS = 10
-MIN_DAILY_COST = 10
-ONLY_NOTIFY_ON_INCREASE = True
-TARGET_CHANNEL = "#costoptimization"
+TITLE = os.environ["TITLE"]     # string
+DAYS = int(os.environ["DAYS"])  # int
+MIN_DAILY_COST = int(os.environ["MIN_DAILY_COST"])   # int
+ONLY_NOTIFY_ON_INCREASE = bool(os.environ["ONLY_NOTIFY_ON_INCREASE"])    # bool
+TARGET_CHANNEL = os.environ["TARGET_CHANNEL"]    # string
 
 
 def get_daily_cost():
