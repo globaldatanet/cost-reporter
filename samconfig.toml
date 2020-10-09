@@ -3,8 +3,7 @@ version = 0.1
 [default.deploy]
 [default.deploy.parameters]
 stack_name = "cost-reporter"
-s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-1w20aho9vrsal"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-v33ejwxkmvrk"
 s3_prefix = "cost-reporter"
-region = "eu-central-1"
-confirm_changeset = true
+confirm_changeset = false
 capabilities = "CAPABILITY_IAM"
