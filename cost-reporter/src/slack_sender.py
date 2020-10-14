@@ -1,26 +1,19 @@
 import slack
 import json
 import os
+import boto3
 
+def get_token():
+    ssm = boto3.client("ssm")
 
-def pureimg(data):
-    data = '[{"text": "", "image_url": "' + data + '"}]'
-    data = [json.loads(data[1:-1])]
-
-    return data
+    return ssm.get_parameter(
+        Name=os.environ["SLACK_TOKEN_PARAMETER"],
+        WithDecryption=True
+    )["Parameter"]["Value"]
 
 
 def send_image(filename, slack_channel):
-    slacker = slack.WebClient(token='your-token-here')
+    filepath = os.path.join(os.path.dirname(os.path.realpath(__file__)), filename)
 
-    payoff = os.path.join(os.path.dirname(os.path.realpath(__file__)), filename)
-
-    response = slacker.files_upload(channel='#theta', file=payoff)
-    payoff = response['file']['permalink']
-
-    response = slacker.chat_postMessage(
-        channel='#channel_name',
-        text="Sample Text",
-        username='Bot name',
-        attachments=pureimg(payoff),
-        icon_emoji=':rocket:')
+    slacker = slack.WebClient(token=get_token())
+    slacker.files_upload(channels=slack_channel, file=filepath, title = "Cost report")

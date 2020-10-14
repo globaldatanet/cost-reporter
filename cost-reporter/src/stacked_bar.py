@@ -1,4 +1,3 @@
-# libraries
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import rc
@@ -51,16 +50,4 @@ def draw_bars(all_bars, dates, title):
     rc('font', weight='bold')
 
     # Show graphic
-    plt.show()
-
-
-if __name__ == "__main__":
-    # Values of each group
-    all_bars = {
-        "Lambda": [12, 28, 1, 8, 22, 21, 12],
-        "EC2": [28, 7, 16, 4, 10, 11, 14],
-        "Salt": [25, 3, 23, 25, 17, 2, 2],
-        "Pepper": [25, 3, 23, 25, 17, 2, 2]
-    }
-
-    draw_bars(all_bars)
+    plt.savefig('/tmp/image.png', bbox_inches='tight')
