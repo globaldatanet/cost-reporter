@@ -1,12 +1,43 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: >
-  SAM Template for cost-reporter
+Description: SAM Template for cost-reporter
+
+#-----------------------------------------------------
+# Parameters
+#-----------------------------------------------------
+
+Parameters:
+  SlackTokenParameterName:
+    Type: String
+    Default: "/cost-reporter/slack-token"
+    NoEcho: true
+  Title:
+    Type: String
+    Default: "Cost Report"
+    Description: "The title to display in the cost report image"
+  Days:
+    Type: String
+    Default: 10
+    Description: "The amount of days to include in the report"
+  MinDailyCost:
+    Type: String
+    Default: 0
+    Description: "The minimal daily cost to trigger a report"
+  OnlyNotifyOnIncrease:
+    Type: String
+    Default: true
+    Description: "Whether to only notify if cost increased within the last day"
+  TargetChannel:
+    Type: String
+    Default: "#ohtrue"
+    Description: "The target slack channel"
+
+
 
 #-----------------------------------------------------
 # Globals
 #-----------------------------------------------------
-Globals: 
+Globals:
   Function:
     Timeout: 3
 
@@ -18,17 +49,18 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: cost-reporter/
-      Handler: lambda.lambda_handler
+      Handler: lambda_function.lambda_handler
       Runtime: python3.8
       Timeout: 30
       Role: !GetAtt LambdaRole.Arn
       Environment:
         Variables:
-          TITLE: "Project: XYZ"
-          DAYS: "10"
-          MIN_DAILY_COST: "10"
-          ONLY_NOTIFY_ON_INCREASE: True
-          TARGET_CHANNEL: "#costoptimization"
+          TITLE: !Ref Title
+          DAYS: !Ref Days
+          MIN_DAILY_COST: !Ref MinDailyCost
+          ONLY_NOTIFY_ON_INCREASE: !Ref OnlyNotifyOnIncrease
+          TARGET_CHANNEL: !Ref TargetChannel
+          SLACK_TOKEN_PARAMETER:  !Ref SlackTokenParameterName
     Metadata:
       BuildMethod: makefile
 
@@ -45,27 +77,37 @@ Resources:
             Action:
               - sts:AssumeRole
       Policies:
-        - 
+        -
          PolicyName: "CostReporterLambdaRole"
          PolicyDocument:
            Version: "2012-10-17"
            Statement:
-              - 
+              -
+                Sid: "Logging"
                 Effect: "Allow"
                 Action:
                   - "logs:CreateLogGroup"
                   - "logs:CreateLogStream"
                   - "logs:PutLogEvents"
-                  - "ce:GetCostAndUsage"
+                Resource: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
+              -
+                Sid: "CostExplorer"
+                Effect: "Allow"
+                Action: "ce:GetCostAndUsage"
                 Resource: "*"
+              -
+                Sid: "ParameterStore"
+                Effect: "Allow"
+                Action: "ssm:GetParameter"
+                Resource: !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${SlackTokenParameterName}"
 
   CWEventsRule:
     Type: AWS::Events::Rule
     Properties:
-      ScheduleExpression: "rate(5 minutes)"
+      ScheduleExpression: "cron(0 17 * * ? *)"
       State:  "ENABLED"
       Targets:
-      - 
+      -
         Arn:
           Fn::GetAtt:
             - CostReporterLambda
@@ -78,4 +120,3 @@ Resources:
       FunctionName: !Ref CostReporterLambda
       Action: lambda:InvokeFunction
       Principal: events.amazonaws.com
-

@@ -20,10 +20,14 @@ The following variables can be configured in the lambda.
 
 Prerequisites:
 - [AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html)
+- A slack token for the lambda (`xoxx-....`) with the permission to write files and send messages
+- A `SecureString` SSM Parameter for the Slack token: `/cost-reporter/slack-token`
+
+Optionally finetune the configuration in [template.yaml](template.yaml) to your liking.
 
 How to deploy:
+
 ```bash
-sam init
 sam build --use-container
-sam deploy
+sam deploy --guided
 ```
