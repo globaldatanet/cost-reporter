@@ -1,7 +1,7 @@
 import slack
-import json
 import os
 import boto3
+
 
 def get_token():
     ssm = boto3.client("ssm")
