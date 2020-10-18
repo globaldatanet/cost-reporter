@@ -16,4 +16,4 @@ def send_image(filename, slack_channel):
     filepath = os.path.join(os.path.dirname(os.path.realpath(__file__)), filename)
 
     slacker = slack.WebClient(token=get_token())
-    slacker.files_upload(channels=slack_channel, file=filepath, title = "Cost report")
+    slacker.files_upload(channels=slack_channel, file=filepath, title="Cost report")

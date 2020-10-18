@@ -31,12 +31,12 @@ def draw_bars(all_bars, dates, title):
     for label in all_bars.keys():
         # There is nothing below the first bar, skip it for the first iteration
         if x > 0:
-            print(previous_bar)
-            bottom = np.add(bottom, previous_bar).tolist()
+            print(previous_bar)  # noqa: F821
+            bottom = np.add(bottom, previous_bar).tolist()  # noqa: F821
 
         plt.bar(r, all_bars[label], bottom=bottom, color=COLORS[x], edgecolor=edgecolor, width=barWidth, label=label)
         x += 1
-        previous_bar = all_bars[label]
+        previous_bar = all_bars[label]  # noqa: F841
 
     # Custom X axis
     plt.xticks(r, dates, fontweight='bold')
