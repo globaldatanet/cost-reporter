@@ -1,6 +1,7 @@
 import slack
 import os
 import boto3
+import pathlib
 
 
 def get_token():
@@ -13,7 +14,7 @@ def get_token():
 
 
 def send_image(filename, slack_channel):
-    filepath = os.path.join(os.path.dirname(os.path.realpath(__file__)), filename)
+    filepath = pathlib.Path(filename).resolve()
 
     slacker = slack.WebClient(token=get_token())
-    slacker.files_upload(channels=slack_channel, file=filepath, title="Cost report")
+    slacker.files_upload(channels=slack_channel, file=str(filepath), title="Cost report")
