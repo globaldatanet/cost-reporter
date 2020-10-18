@@ -13,10 +13,7 @@ def get_daily_cost(days):
     start_date = (datetime.now() - timedelta(days=days)).strftime('%Y-%m-%d')
 
     # Calculate dates
-    dates = []
-    for i in range(0, days):
-        day = (datetime.today() - timedelta(days=i)).strftime("%d")
-        dates.append(day)
+    dates = [(datetime.today() - timedelta(days=i)).strftime("%d") for i in range(0, days)]
     dates.reverse()
 
     # Get daily spend
@@ -54,25 +51,24 @@ def get_daily_cost(days):
             if not found_service:
                 daily_cost[service].append(0)
 
-    return (daily_cost, dates)
+    return daily_cost, dates
 
 
 def trigger_notification(graph_data):
     should_send = True
 
     total_cost_today = 0
+    total_cost_yesterday = 0
     for service in graph_data.keys():
         total_cost_today += graph_data[service][-1]
+        total_cost_yesterday += graph_data[service][-2]
     logging.info(f"Total cost today: {total_cost_today}")
+    logging.info(f"Total cost yesterday: {total_cost_yesterday}")
 
-    only_notify_on_increase = bool(os.environ["ONLY_NOTIFY_ON_INCREASE"])
-    if only_notify_on_increase:
-        total_cost_yesterday = 0
-        for service in graph_data.keys():
-            total_cost_yesterday += graph_data[service][-2]
-        logging.info(f"Total cost yesterday: {total_cost_yesterday}")
-
+    only_notify_on_increase = os.environ["ONLY_NOTIFY_ON_INCREASE"]
+    if only_notify_on_increase == "true":
         if total_cost_today < total_cost_yesterday:
+            logging.info("Not sending, since cost did not increase and I should only notify on increase.")
             should_send = False
 
     min_daily_cost = int(os.environ["MIN_DAILY_COST"])
@@ -85,27 +81,26 @@ def trigger_notification(graph_data):
     return should_send
 
 
-def lambda_handler(event, context):
+def lambda_handler(event, _):
     days = int(os.environ["DAYS"])
 
     (daily_cost, dates) = get_daily_cost(days)
 
-    # Find the biggest spenders
-    total_cost = []
-    for service in daily_cost.keys():
-        total_cost.append((service, sum(daily_cost[service])))
+    # Summarize the cost and find the biggest spenders
+    total_cost = [(service, sum(daily_cost[service])) for service in daily_cost.keys()]
     total_cost = sorted(total_cost, key=lambda x: x[1], reverse=True)
 
-    top_5 = [x[0] for x in total_cost][0:5]
-    the_rest = [x[0] for x in total_cost][5:]
-    logging.info(top_5)
+    services_by_cost = [x[0] for x in total_cost]
+    top_5 = services_by_cost[0:5]
+    the_rest = services_by_cost[5:]
+    logging.info("Top 5 services:" + top_5)
 
     graph_data = {}
     # add top-5
     for service in top_5:
         graph_data[service] = daily_cost[service]
     # add the rest
-    graph_data["Other"] = [0 for x in range(days)]
+    graph_data["Other"] = [0] * days
     for service in the_rest:
         graph_data["Other"] = [x + y for x, y in zip(graph_data["Other"], daily_cost[service])]
 
