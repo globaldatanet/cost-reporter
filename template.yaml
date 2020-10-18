@@ -10,21 +10,23 @@ Parameters:
   SlackTokenParameterName:
     Type: String
     Default: "/cost-reporter/slack-token"
-    NoEcho: true
   Title:
     Type: String
     Default: "Cost Report"
     Description: "The title to display in the cost report image"
   Days:
-    Type: String
+    Type: Number
     Default: 10
     Description: "The amount of days to include in the report"
   MinDailyCost:
-    Type: String
+    Type: Number
     Default: 0
     Description: "The minimal daily cost to trigger a report"
   OnlyNotifyOnIncrease:
     Type: String
+    AllowedValues:
+      - true
+      - false
     Default: true
     Description: "Whether to only notify if cost increased within the last day"
   TargetChannel:
@@ -32,14 +34,6 @@ Parameters:
     Default: "#ohtrue"
     Description: "The target slack channel"
 
-
-
-#-----------------------------------------------------
-# Globals
-#-----------------------------------------------------
-Globals:
-  Function:
-    Timeout: 3
 
 #-----------------------------------------------------
 # Resources
@@ -76,30 +70,24 @@ Resources:
                 - lambda.amazonaws.com
             Action:
               - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Policies:
         -
-         PolicyName: "CostReporterLambdaRole"
-         PolicyDocument:
-           Version: "2012-10-17"
-           Statement:
-              -
-                Sid: "Logging"
-                Effect: "Allow"
-                Action:
-                  - "logs:CreateLogGroup"
-                  - "logs:CreateLogStream"
-                  - "logs:PutLogEvents"
-                Resource: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
-              -
-                Sid: "CostExplorer"
-                Effect: "Allow"
-                Action: "ce:GetCostAndUsage"
-                Resource: "*"
-              -
-                Sid: "ParameterStore"
-                Effect: "Allow"
-                Action: "ssm:GetParameter"
-                Resource: !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${SlackTokenParameterName}"
+          PolicyName: "CostReporterLambdaRole"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+               -
+                 Sid: "CostExplorer"
+                 Effect: "Allow"
+                 Action: "ce:GetCostAndUsage"
+                 Resource: "*"
+               -
+                 Sid: "ParameterStore"
+                 Effect: "Allow"
+                 Action: "ssm:GetParameter"
+                 Resource: !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter${SlackTokenParameterName}"
 
   CWEventsRule:
     Type: AWS::Events::Rule
@@ -108,10 +96,7 @@ Resources:
       State:  "ENABLED"
       Targets:
       -
-        Arn:
-          Fn::GetAtt:
-            - CostReporterLambda
-            - Arn
+        Arn: !GetAtt CostReporterLambda.Arn
         Id: CostReporterLambda
 
   permissionForEventsToInvokeLambda:
@@ -120,3 +105,4 @@ Resources:
       FunctionName: !Ref CostReporterLambda
       Action: lambda:InvokeFunction
       Principal: events.amazonaws.com
+      SourceArn: !GetAtt CWEventsRule.Arn
