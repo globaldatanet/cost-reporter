@@ -82,6 +82,11 @@ def trigger_notification(graph_data):
 
 
 def lambda_handler(event, _):
+    # Configure logging
+    level = os.environ.get("LOG_LEVEL", "INFO")
+    logger = logging.getLogger()
+    logger.setLevel(level)
+
     days = int(os.environ["DAYS"])
 
     (daily_cost, dates) = get_daily_cost(days)
@@ -93,7 +98,7 @@ def lambda_handler(event, _):
     services_by_cost = [x[0] for x in total_cost]
     top_5 = services_by_cost[0:5]
     the_rest = services_by_cost[5:]
-    logging.info("Top 5 services:" + top_5)
+    logging.info("Top 5 services:" + str(top_5))
 
     graph_data = {}
     # add top-5
@@ -104,9 +109,13 @@ def lambda_handler(event, _):
     for service in the_rest:
         graph_data["Other"] = [x + y for x, y in zip(graph_data["Other"], daily_cost[service])]
 
+    logging.info("Generating the graph...")
     stacked_bar.draw_bars(graph_data, dates, f"{os.environ['TITLE']} (last {days} days)")
+    logging.info("Graph generated")
 
     # Send the report if necessary
     if trigger_notification(graph_data):
         logging.info("Sending message")
         slack_sender.send_image("/tmp/image.png", os.environ["TARGET_CHANNEL"])
+    else:
+        logging.info("Not sending the message due to trigger configuration.")
