@@ -10,7 +10,7 @@ Example:
 
 ## Configuration
 
-The following settings can be configured [here](template.yaml):
+The following settings can be configured:
 - `Title`: The title for the cost report (i.e.: "Project: XYZ")
 - `Days`: The days to report (i.e. 10)
 - `MinDailyCost`: The minimal daily cost required to trigger a report in $ (i.e. 10)
@@ -23,8 +23,6 @@ Prerequisites:
 - [AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html)
 - A slack token for the lambda (`xoxx-....`) with the permission to write files and send messages
 - A `SecureString` SSM Parameter for the Slack token: `/cost-reporter/slack-token`
-
-Optionally finetune the configuration in [template.yaml](template.yaml) to your liking.
 
 How to deploy:
 
