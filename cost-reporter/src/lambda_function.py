@@ -55,6 +55,8 @@ def get_daily_cost(days):
 
 
 def trigger_notification(graph_data):
+    """ Determines whether or not to send the notification
+    """
     should_send = True
 
     total_cost_today = 0
@@ -66,7 +68,7 @@ def trigger_notification(graph_data):
     logging.info(f"Total cost yesterday: {total_cost_yesterday}")
 
     only_notify_on_increase = os.environ["ONLY_NOTIFY_ON_INCREASE"]
-    if only_notify_on_increase == "true":
+    if only_notify_on_increase.lower() == "true":
         if total_cost_today < total_cost_yesterday:
             logging.info("Not sending, since cost did not increase and I should only notify on increase.")
             should_send = False
