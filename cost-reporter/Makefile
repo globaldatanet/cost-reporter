@@ -17,5 +17,4 @@ install: ## Install all dependencies
 	pip install -r requirements-dev.txt
 
 test: ## Run the tests
-	. ../.venv/bin/activate; \
-	PYTHONPATH=./src pytest -o log_cli=true -o log_cli_level=INFO
+	tox -e py
