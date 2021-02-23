@@ -6,15 +6,13 @@ import os
 import logging
 
 
-def get_daily_cost(days):
-    """ Returns the spend for each service together with the days
+def get_daily_cost():
+    """ Return the spend for each service together with the days
     """
+    days = int(os.environ["DAYS"])
+
     today = datetime.today().strftime('%Y-%m-%d')
     start_date = (datetime.now() - timedelta(days=days)).strftime('%Y-%m-%d')
-
-    # Calculate dates
-    dates = [(datetime.today() - timedelta(days=i)).strftime("%d") for i in range(0, days)]
-    dates.reverse()
 
     # Get daily spend
     client = boto3.client('ce')
@@ -35,8 +33,7 @@ def get_daily_cost(days):
         ]
     )["ResultsByTime"]
 
-    # Prep the data for the graphing
-    # Get the list of services
+    # Prep the data for the graphing: Get the list of services
     services = [x["Keys"][0] for x in results[0]["Groups"]]
     daily_cost = {service: [] for service in services}
     for service in services:
@@ -51,10 +48,12 @@ def get_daily_cost(days):
             if not found_service:
                 daily_cost[service].append(0)
 
-    return daily_cost, dates
+    return daily_cost
 
 
 def trigger_notification(graph_data):
+    """ Determine whether or not a notification should be send
+    """
     should_send = True
 
     total_cost_today = 0
@@ -81,36 +80,53 @@ def trigger_notification(graph_data):
     return should_send
 
 
+def get_highest_spenders(daily_cost, number):
+    """ Divide the cost between the {number} highest spending services and the rest
+    """
+    # Summarize the cost and find the biggest spenders
+    total_cost = [(service, sum(daily_cost[service])) for service in daily_cost.keys()]
+    total_cost = sorted(total_cost, key=lambda x: x[1], reverse=True)
+
+    services_by_cost = [x[0] for x in total_cost]
+    highest_spenders = services_by_cost[0:number]
+    the_rest = services_by_cost[number:]
+
+    logging.info(f"Top {number} services:" + str(highest_spenders))
+
+    return (highest_spenders, the_rest)
+
+
+def compile_graph_data(daily_cost, highest_spenders, the_rest):
+    days = int(os.environ["DAYS"])
+    graph_data = {}
+
+    # add the highest spenders
+    for service in highest_spenders:
+        graph_data[service] = daily_cost[service]
+
+    # add the rest
+    graph_data["Other"] = [0] * days
+    for service in the_rest:
+        graph_data["Other"] = [x + y for x, y in zip(graph_data["Other"], daily_cost[service])]
+
+    return graph_data
+
+
 def lambda_handler(event, _):
     # Configure logging
     level = os.environ.get("LOG_LEVEL", "INFO")
     logger = logging.getLogger()
     logger.setLevel(level)
 
-    days = int(os.environ["DAYS"])
+    daily_cost = get_daily_cost()
 
-    (daily_cost, dates) = get_daily_cost(days)
+    # determine the top 5 spending services
+    (highest_spenders, the_rest) = get_highest_spenders(daily_cost, 5)
 
-    # Summarize the cost and find the biggest spenders
-    total_cost = [(service, sum(daily_cost[service])) for service in daily_cost.keys()]
-    total_cost = sorted(total_cost, key=lambda x: x[1], reverse=True)
-
-    services_by_cost = [x[0] for x in total_cost]
-    top_5 = services_by_cost[0:5]
-    the_rest = services_by_cost[5:]
-    logging.info("Top 5 services:" + str(top_5))
-
-    graph_data = {}
-    # add top-5
-    for service in top_5:
-        graph_data[service] = daily_cost[service]
-    # add the rest
-    graph_data["Other"] = [0] * days
-    for service in the_rest:
-        graph_data["Other"] = [x + y for x, y in zip(graph_data["Other"], daily_cost[service])]
+    graph_data = compile_graph_data(daily_cost, highest_spenders, the_rest)
 
     logging.info("Generating the graph...")
-    stacked_bar.draw_bars(graph_data, dates, f"{os.environ['TITLE']} (last {days} days)")
+    stacked_bar.draw_bars(graph_data, f"{os.environ['TITLE']} (last {os.environ['DAYS']} days)")
     logging.info("Graph generated")
 
     # Send the report if necessary
