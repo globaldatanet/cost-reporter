@@ -17,5 +17,4 @@ install: ## Install all dependencies
 	pip install -r requirements-dev.txt
 
 test: ## Run the tests
-	. ../.venv/bin/activate; \
-	PYTHONPATH=./src pytest
+	tox -e py

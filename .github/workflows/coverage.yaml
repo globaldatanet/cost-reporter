@@ -1,0 +1,31 @@
+name: Python coverage
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+env:
+  AWS_DEFAULT_REGION: eu-central-1
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+    - name: Install dependencies
+      run: |
+        cd cost-reporter
+        python -m pip install --upgrade pip
+        pip install -r requirements-dev.txt
+    - name: Coverage
+      run: |
+        cd cost-reporter
+        PYTHONPATH=./src coverage run --branch -m pytest
+        PYTHONPATH=./src coverage report src/*.py

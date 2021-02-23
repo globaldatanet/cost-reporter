@@ -1,5 +1,7 @@
 # Cost Reporter
 
+![Tests](https://github.com/globaldatanet/cost-reporter/workflows/Tests/badge.svg) ![Linting](https://github.com/globaldatanet/cost-reporter/workflows/Linting/badge.svg)
+
 A lambda which sends a daily cost and trend report to slack. It helps with one of the three [**FinOps**](https://www.linkedin.com/company/finops-foundation/) phases: `Inform`. It can send you a report **every day** / **only when cost increases** / **only when cost breached a threshold** depending on your [configuration](template.yaml).
 
 Helpful to keep an eye in new projects when the architecture changes quickly, but also for existing projects if you want to keep a close eye on cost.
