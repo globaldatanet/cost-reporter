@@ -64,8 +64,8 @@ def trigger_notification(graph_data):
     logging.info(f"Total cost today: {total_cost_today}")
     logging.info(f"Total cost yesterday: {total_cost_yesterday}")
 
-    only_notify_on_increase = os.environ["ONLY_NOTIFY_ON_INCREASE"]
-    if only_notify_on_increase == "true":
+    only_notify_on_increase = bool(os.environ["ONLY_NOTIFY_ON_INCREASE"])
+    if only_notify_on_increase:
         if total_cost_today < total_cost_yesterday:
             logging.info("Not sending, since cost did not increase and I should only notify on increase.")
             should_send = False
