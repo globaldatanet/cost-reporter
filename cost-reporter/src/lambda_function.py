@@ -91,6 +91,10 @@ def get_highest_spenders(daily_cost, number):
     highest_spenders = services_by_cost[0:number]
     the_rest = services_by_cost[number:]
 
+    if len(highest_spenders) < number:
+        logging.info(f"Notice: I was looking for the top {number} of spending services, but there are " +
+                     f"only {len(highest_spenders)}. Will continue anyway.")
+
     logging.info(f"Top {number} services:" + str(highest_spenders))
 
     return (highest_spenders, the_rest)
@@ -115,8 +119,7 @@ def compile_graph_data(daily_cost, highest_spenders, the_rest):
 def lambda_handler(event, _):
     # Configure logging
     level = os.environ.get("LOG_LEVEL", "INFO")
-    logger = logging.getLogger()
-    logger.setLevel(level)
+    logging.getLogger().setLevel(level)
 
     daily_cost = get_daily_cost()
 
