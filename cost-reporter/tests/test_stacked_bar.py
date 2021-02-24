@@ -1,27 +1,10 @@
 import datetime
-import pytest
 import stacked_bar
-
-FAKE_DATE = datetime.datetime(2020, 12, 25, 17, 5, 55)
-
-
-@pytest.fixture
-def patch_datetime_today(monkeypatch):
-    class MyDateTime:
-        @classmethod
-        def today(cls):
-            return FAKE_DATE
-
-    monkeypatch.setattr(datetime, 'datetime', MyDateTime)
+from freezegun import freeze_time
 
 
-def test_patch_datetime(patch_datetime_today):
-    """ Make sure the fixture works
-    """
-    assert datetime.datetime.today() == FAKE_DATE
-
-
-def test_generate_dates1(monkeypatch, patch_datetime_today):
+@freeze_time('2020-12-23')
+def test_generate_dates1(monkeypatch):
     """
     Given: A number of days = 5 and today being the FAKE_DATE
     When: The function is called
