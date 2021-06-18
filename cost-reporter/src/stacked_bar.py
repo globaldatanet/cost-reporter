@@ -1,10 +1,11 @@
-from datetime import datetime, timedelta
-import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib import rc
 import os
+from datetime import datetime, timedelta
 from pathlib import Path
+from typing import Dict, List
 
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib import rc
 
 # Thanks to Olivier Gaudard for this example! https://python-graph-gallery.com/12-stacked-barplot-with-matplotlib/
 
@@ -20,7 +21,7 @@ DARK_GREEN = "#2db2a1"
 COLORS = [PURPLE, DARK_GREEN, PINK, YELLOW, LIGHT_GREEN, MAGENTA, CYAN]
 
 
-def generate_dates():
+def generate_dates() -> List[str]:
     """ Create a short-format of dates which lends itself for labeling the X axis.
     """
     days = int(os.environ["DAYS"])
@@ -31,7 +32,7 @@ def generate_dates():
     return dates
 
 
-def draw_bars(all_bars, title):
+def draw_bars(all_bars: Dict[str, List[float]], title: str) -> None:
     dates = generate_dates()
     days = len(dates)
     # The position of the bars on the x-axis

@@ -1,13 +1,16 @@
-import boto3
+import logging
+import os
 from datetime import datetime, timedelta
+from typing import Dict, List, Tuple
+
+import boto3
+
 import slack_sender
 import stacked_bar
-import os
-import logging
 
 
-def get_daily_cost():
-    """ Return the spend for each service together with the days
+def get_daily_cost() -> Dict[str, List[float]]:
+    """ Return the spend for each service together by day
     """
     days = int(os.environ["DAYS"])
 
@@ -51,7 +54,7 @@ def get_daily_cost():
     return daily_cost
 
 
-def trigger_notification(graph_data):
+def trigger_notification(graph_data: Dict[str, List[float]]) -> bool:
     """ Determine whether or not a notification should be send
     """
     should_send = True
@@ -80,7 +83,7 @@ def trigger_notification(graph_data):
     return should_send
 
 
-def get_highest_spenders(daily_cost, number):
+def get_highest_spenders(daily_cost: Dict[str, List[float]], number: int) -> Tuple[List[str], List[str]]:
     """ Divide the cost between the {number} highest spending services and the rest
     """
     # Summarize the cost and find the biggest spenders
@@ -97,12 +100,13 @@ def get_highest_spenders(daily_cost, number):
 
     logging.info(f"Top {number} services:" + str(highest_spenders))
 
-    return (highest_spenders, the_rest)
+    return highest_spenders, the_rest
 
 
-def compile_graph_data(daily_cost, highest_spenders, the_rest):
+def compile_graph_data(daily_cost: Dict[str, List[float]], highest_spenders: List[str],
+                       the_rest: List[str]) -> Dict[str, List[float]]:
     days = int(os.environ["DAYS"])
-    graph_data = {}
+    graph_data = {}  # type: Dict[str, List[float]]
 
     # add the highest spenders
     for service in highest_spenders:
@@ -116,7 +120,7 @@ def compile_graph_data(daily_cost, highest_spenders, the_rest):
     return graph_data
 
 
-def lambda_handler(event, _):
+def lambda_handler(event: Dict, _) -> None:
     # Configure logging
     level = os.environ.get("LOG_LEVEL", "INFO")
     logging.getLogger().setLevel(level)

@@ -1,6 +1,8 @@
 import datetime
-import stacked_bar
+
 from freezegun import freeze_time
+
+import stacked_bar
 
 
 @freeze_time('2020-12-23')
